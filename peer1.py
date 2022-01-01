@@ -1,50 +1,27 @@
-from queue import Queue
-from threading import Thread
 import time
-import socket 
+from node import Node
 
-def client(out_q):
-    file = 'y'
-    x = 0
-    while file != 'n':
-        if x == 0:
-            addressNum = input("Please Enter peer address: ")
-            portNum = input("Please Enter peer port: ")
-            x += 1
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect((addressNum,int(portNum)))
-        file = input("Enter new query: ")
-        client.sendall(file.encode('utf-8'))
-        from_peer1 = client.recv(4096)
-        data = from_peer1.decode()
-        if data == 'Send Blackwidow':
-            print("Received Blackwidow")
-        else :
-            print(data)
-    client.close()
+def node_callback(event, main_node, connected_node, data):
+    try:
+        if event != 'node_request_to_stop': # node_request_to_stop does not have any connected_node, while it is the main_node that is stopping!
+            print('Event: {} from main node {}: connected node {}: {}'.format(event, main_node.id, connected_node.id, data))
 
-def server(in_q):
-    serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    serv.bind(('0.0.0.0', 8081))
-    serv.listen(5)
-    while True:
-        conn, addr = serv.accept()
-        while True:
-            data = conn.recv(4096)
-            data = data.decode()
-            if not data: break
-            from_peer2 = data
-            if(from_peer2 == 'Spiderman'):
-                output = 'Send SpiderMan'
-            else:
-                output = from_peer2 + " not found"
-            conn.sendall(output.encode('utf-8'))
-    conn.close
+    except Exception as e:
+        print(e)
 
-q = Queue()
-t1 = Thread(target = server, args =(q, ))
-t2 = Thread(target = client, args =(q, ))
-t1.start()
-t2.start()
 
+node_1 = Node("127.0.0.1", 8001, id=1, callback=node_callback)
+time.sleep(1)
+
+node_1.start()
+time.sleep(5)
+
+
+node_1.connect_with_node('127.0.0.1', 8002)
+time.sleep(10)
+
+node_1.send_to_nodes("message: hoi from node 1")
+time.sleep(5)
+
+node_1.stop()
+print('end')
