@@ -4,10 +4,15 @@ import time
 import socket 
 
 def client(out_q):
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(('0.0.0.0',8081))
     file = 'y'
+    x = 0
     while file != 'n':
+        if x == 0:
+            addressNum = input("Please Enter peer address: ")
+            portNum = input("Please Enter peer port: ")
+            x += 1
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((addressNum,int(portNum)))
         file = input("Enter new query: ")
         client.sendall(file.encode('utf-8'))
         from_peer1 = client.recv(4096)
@@ -25,16 +30,16 @@ def server(in_q):
     serv.listen(5)
     while True:
         conn, addr = serv.accept()
-        from_client = ''
         while True:
             data = conn.recv(4096)
             data = data.decode()
             if not data: break
-            from_client += data
-            print(from_client)
-            output = "I am the SERVER <br/>"
+            from_peer2 = data
+            if(from_peer2 == 'Blackwidow'):
+                output = 'Send Blackwidow'
+            else:
+                output = from_peer2 + " not found"
             conn.sendall(output.encode('utf-8'))
-
     conn.close
 
 q = Queue()

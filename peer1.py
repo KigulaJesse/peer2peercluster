@@ -4,15 +4,23 @@ import time
 import socket 
 
 def client(out_q):
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(('0.0.0.0',8082))
     file = 'y'
+    x = 0
     while file != 'n':
+        if x == 0:
+            addressNum = input("Please Enter peer address: ")
+            portNum = input("Please Enter peer port: ")
+            x += 1
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((addressNum,int(portNum)))
         file = input("Enter new query: ")
         client.sendall(file.encode('utf-8'))
-        from_server = client.recv(4096)
-        data = from_server.decode()
-        print(data)
+        from_peer1 = client.recv(4096)
+        data = from_peer1.decode()
+        if data == 'Send Blackwidow':
+            print("Received Blackwidow")
+        else :
+            print(data)
     client.close()
 
 def server(in_q):
@@ -28,7 +36,6 @@ def server(in_q):
             if not data: break
             from_peer2 = data
             if(from_peer2 == 'Spiderman'):
-                print(from_peer2)
                 output = 'Send SpiderMan'
             else:
                 output = from_peer2 + " not found"
@@ -37,7 +44,7 @@ def server(in_q):
 
 q = Queue()
 t1 = Thread(target = server, args =(q, ))
-#t2 = Thread(target = client, args =(q, ))
+t2 = Thread(target = client, args =(q, ))
 t1.start()
-#t2.start()
+t2.start()
 
