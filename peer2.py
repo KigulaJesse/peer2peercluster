@@ -16,7 +16,7 @@ time.sleep(1)
 node_2.start()
 time.sleep(15)
 
-node_2.send_to_nodes("message: hoi from node 2")
+node_2.send_to_nodes("message: Hello from node 2")
 time.sleep(5)
 
 node_2.stop()
