@@ -1,6 +1,21 @@
-from os.path import exists
+# Python program showing
+# how to kill threads
+# using set/reset stop
+# flag
 
-var = "hpeer1james.txt"
+import threading
+import time
 
+def run():
+	while True:
+		print('thread running')
+		global stop_threads
+		if stop_threads:
+			break
 
-print(var[6:])
+stop_threads = False
+t1 = threading.Thread(target = run)
+t1.start()
+stop_threads = True
+t1.join()
+print('thread killed')

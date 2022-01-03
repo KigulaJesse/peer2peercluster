@@ -1,3 +1,4 @@
+import os
 import socket
 import sys
 from os.path import exists
@@ -18,6 +19,7 @@ class Peer():
         self.peerHost = "127.0.0.1"
         self.peers = []
         self.hashTable = {}
+        self.shutdown = False
         self.connectToPeers()
         self.getBackResources()
 
@@ -49,19 +51,19 @@ class Peer():
         print("\t" +self.peerName)
         print("****************************")
 
-        n = -1
-        while n != 4:
-            try:
+        clientEnter = -1
+        try:
+            while clientEnter != 4:
                 print("\n****CLIENT MENU****")
                 print("1. Register a File")
                 print("2. Search for a File")
                 print("3. Obtain a File")
                 print("4. EXIT \n")
 
-                n = input("Enter your choice: ")
+                clientEnter = int(input("Enter your choice: "))
 
                 #register a file
-                if int(n) == 1:
+                if clientEnter == 1:
                     fileName = input("Enter filename with extension: ")
                     file_exists = exists(FILE_PATH +self.peerName+"/"+fileName)
                     if file_exists:
@@ -71,7 +73,7 @@ class Peer():
                         print("\nDANGER! You do not have this file on your computer\n")
 
                 #search for a file on connected peers    
-                elif int(n) == 2:
+                elif clientEnter == 2:
                     fileName = input("Enter the File Name to be searched: ")
                     self.peersWithFile = []
                     if fileName in self.hashTable:
@@ -94,7 +96,7 @@ class Peer():
                     print(self.peersWithFile)
 
                 #obtain a file    
-                elif int(n) == 3:
+                elif clientEnter == 3:
                     
                     obtainFileName = input("Enter the File Name:")
                     
@@ -135,9 +137,8 @@ class Peer():
                             print("File not found")					
                     
                 #relocation of resources
-                elif int(n) == 4:
+                elif clientEnter == 4:
                     if len(self.hashTable) > 0:
-                        print("Replicate on another server")
                         if len(self.peers) > 0:
                             peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
                             port = 5000 + int(self.peers[0])               
@@ -158,11 +159,14 @@ class Peer():
                             peerSocket.close()
                         else:
                             print("\n DANGER! Not connected to any other peers")
-                    
+
+                    print("THANK YOU AND GOODBYE")
+                    os._exit(1)
                 else:
                     print("Please choose a correct command")
-            except ValueError:
-                print("\nPlease enter the correct commands")
+
+        except ValueError:
+            print("\nPlease enter the correct commands")
         
     #server function runs the main server code
     def server(self):
@@ -247,3 +251,6 @@ t2 = Thread(target = peer.client, args=( ))
 
 t1.start()
 t2.start()
+
+
+
