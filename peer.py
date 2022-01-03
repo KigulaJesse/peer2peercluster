@@ -23,6 +23,7 @@ class Peer():
         self.connectToPeers()
         self.getBackResources()
 
+    #getback resources
     def getBackResources(self):
         if len(self.peers) > 0:
             checkForFiles = "c" + self.peerName
@@ -53,17 +54,17 @@ class Peer():
 
         clientEnter = -1
         try:
-            while clientEnter != 4:
+            while int(clientEnter) != 4:
                 print("\n****CLIENT MENU****")
                 print("1. Register a File")
                 print("2. Search for a File")
                 print("3. Obtain a File")
                 print("4. EXIT \n")
 
-                clientEnter = int(input("Enter your choice: "))
+                clientEnter = input("Enter your choice: ")
 
                 #register a file
-                if clientEnter == 1:
+                if int(clientEnter) == 1:
                     if len(self.peers) == 0:
                         self.connectToPeers()
 
@@ -76,7 +77,7 @@ class Peer():
                         print("\nDANGER! You do not have this file on your computer\n")
 
                 #search for a file on connected peers    
-                elif clientEnter == 2:
+                elif int(clientEnter) == 2:
                     if len(self.peers) == 0:
                         self.connectToPeers()
 
@@ -102,7 +103,7 @@ class Peer():
                     print(self.peersWithFile)
 
                 #obtain a file    
-                elif clientEnter == 3:
+                elif int(clientEnter) == 3:
                     if len(self.peers) == 0:
                         self.connectToPeers()
                     
@@ -145,7 +146,7 @@ class Peer():
                             print("File not found")					
                     
                 #relocation of resources
-                elif clientEnter == 4:
+                elif int(clientEnter) == 4:
                     if len(self.peers) == 0:
                         self.connectToPeers()
 
@@ -158,7 +159,8 @@ class Peer():
                                 #sending hash of file
                                 hashAddRequest = "h"+self.peerName+ doc
                                 peerSocket.sendall(hashAddRequest.encode('utf-8'))
-
+                                print("Reallocating resources to peer"+str(self.peers[0]))
+                            
                                 #receiving response from server
                                 fromPeer = peerSocket.recv(4096)
                                 fromPeer = fromPeer.decode()
