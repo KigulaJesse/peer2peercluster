@@ -64,6 +64,9 @@ class Peer():
 
                 #register a file
                 if clientEnter == 1:
+                    if len(self.peers) == 0:
+                        self.connectToPeers()
+
                     fileName = input("Enter filename with extension: ")
                     file_exists = exists(FILE_PATH +self.peerName+"/"+fileName)
                     if file_exists:
@@ -74,6 +77,9 @@ class Peer():
 
                 #search for a file on connected peers    
                 elif clientEnter == 2:
+                    if len(self.peers) == 0:
+                        self.connectToPeers()
+
                     fileName = input("Enter the File Name to be searched: ")
                     self.peersWithFile = []
                     if fileName in self.hashTable:
@@ -97,6 +103,8 @@ class Peer():
 
                 #obtain a file    
                 elif clientEnter == 3:
+                    if len(self.peers) == 0:
+                        self.connectToPeers()
                     
                     obtainFileName = input("Enter the File Name:")
                     
@@ -138,6 +146,9 @@ class Peer():
                     
                 #relocation of resources
                 elif clientEnter == 4:
+                    if len(self.peers) == 0:
+                        self.connectToPeers()
+
                     if len(self.hashTable) > 0:
                         if len(self.peers) > 0:
                             peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
