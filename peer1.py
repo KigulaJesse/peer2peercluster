@@ -9,8 +9,6 @@ def node_callback(event, main_node, connected_node, data):
     except Exception as e:
         print(e)
 
-
-
 node_1 = Node("127.0.0.1", 8001, id=1, callback=node_callback)
 node_1.start()
 
