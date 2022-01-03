@@ -1,8 +1,6 @@
 import time
 import socket
-
-from test import is_port_in_use 
-
+import sys
 
 class Peer():
     def __init__(self,peerName,peerID,maxPeers=None):
@@ -67,11 +65,22 @@ class Peer():
                     
                 elif int(n) == 3:
                     obtainFileName = input("Enter the File Name:")
-                    obtainPeerName = input("From where you wish to obtain " + fileName + " :")
+                    obtainPeerName = input("From where you wish to obtain " + obtainFileName + " :")
+                    obtainPeerPort = 5000 + int(obtainPeerName[-1])
                     
-                    self.obtain(obtainFileName,obtainPeerName)
-					
-					
+                    obtainRequest = "o" + obtainFileName
+                    peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    peerSocket.connect(('127.0.0.1', obtainPeerPort))
+                    peerSocket.sendall(obtainRequest.encode('utf-8'))
+                    
+                    file = open("peerFiles/"+self.peerName+"/"+obtainFileName, "wb")
+                    print("Receiving....")
+                    data = peerSocket.recv(1024)
+                    if data == b"DONE":
+                            print("Done Receiving.")
+                            break
+                    file.write(data)
+                    file.close()					
                 elif int(n) == 4:
                     #replication of all in its hash table
                     print("Replication to all peers")
@@ -90,14 +99,19 @@ class Peer():
         while True:
             conn, addr = peerServ.accept()
             while True:
-                incomingRequest = conn.recv(4096)
+                incomingRequest = conn.recv(1024)
                 incomingRequest = incomingRequest.decode()
                 if not incomingRequest: break
                 if incomingRequest[0] == 's':
                     outGoingRequest = self.searchForResource(incomingRequest)
+                    conn.sendall(outGoingRequest.encode('utf-8'))
+                elif incomingRequest[0] == 'o':
+                    fileToSend = open("peerFiles/"+self.peerName+"/"+incomingRequest[1:],'rb')
+                    outGoingRequest = fileToSend.read(1024)
+                    conn.send(outGoingRequest)
                 else:
                     outGoingRequest = "bluh"
-                conn.sendall(outGoingRequest.encode('utf-8'))
+                    conn.sendall(outGoingRequest.encode('utf-8'))
         conn.close
 
 
@@ -125,6 +139,6 @@ class Peer():
                 self.peers.append(x)
             x += 1
 
-    def is_port_in_use(port):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            return s.connect_ex(('127.0.0.1', port)) == 0
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
