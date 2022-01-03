@@ -151,8 +151,8 @@ def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('127.0.0.1', port)) == 0
 
+""""INITIALISES A PEER"""
 peer = Peer(sys.argv[1],sys.argv[1][-1])
-
 t1 = Thread(target = peer.server, args=( ))
 t2 = Thread(target = peer.client, args=( ))
 
