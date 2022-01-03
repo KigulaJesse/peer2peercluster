@@ -10,18 +10,20 @@ def node_callback(event, main_node, connected_node, data):
         print(e)
 
 
+
 node_1 = Node("127.0.0.1", 8001, id=1, callback=node_callback)
-time.sleep(1)
-
 node_1.start()
-time.sleep(5)
 
-
-node_1.connect_with_node('127.0.0.1', 8002)
-time.sleep(10)
-
-node_1.send_to_nodes("message: hoi from node 1")
-time.sleep(5)
-
+file = 'y'
+x = 0
+while file != 'n':
+    if x == 0:
+        addressNum = input("Please Enter peer address: ")
+        portNum = input("Please Enter peer port: ")
+        x += 1
+    node_1.connect_with_node('addressNum', portNum)
+    file = input("Enter new query: ")
+    node_1.send_to_nodes("message: hoi from node 1")
+        
 node_1.stop()
 print('end')
