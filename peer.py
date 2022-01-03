@@ -51,7 +51,6 @@ class Peer():
 
         n = -1
         while n != 4:
-
             try:
                 print("\n****CLIENT MENU****")
                 print("1. Register a File")
@@ -208,7 +207,7 @@ class Peer():
     def searchForResourceValue(self, searchRequest):
         for h in self.hashTable:
             if self.hashTable[h] == searchRequest[1:]:
-                fileName = self.hashTable[h]
+                fileName = h
                 del self.hashTable[h]
                 return fileName
         return "not found"
