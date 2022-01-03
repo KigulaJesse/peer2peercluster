@@ -19,6 +19,28 @@ class Peer():
         self.peers = []
         self.hashTable = {}
         self.connectToPeers()
+        self.getBackResources()
+
+    def getBackResources(self):
+        if len(self.peers) > 0:
+            checkForFiles = "c" + self.peerName
+            for ID in self.peers:
+                peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
+                port = 5000 + int(ID)               
+                peerSocket.connect(('127.0.0.1', port))
+                #sending search request
+                peerSocket.sendall(checkForFiles.encode('utf-8'))
+                
+                #receiving from client
+                fromPeer = peerSocket.recv(4096)
+                fromPeer = fromPeer.decode()
+                if fromPeer != "not found":
+                    file_exists = exists(FILE_PATH +self.peerName+"/"+fromPeer)
+                    if file_exists:
+                        self.storeInHash(fromPeer,self.peerName)
+            
+                peerSocket.close()
+        
 
 
     # client function runs the main client code 
@@ -108,9 +130,6 @@ class Peer():
                             file = open(FILE_PATH +self.peerName+"/"+obtainFileName, "wb")
                             print("Receiving....")
                             data = peerSocket.recv(1024)
-                            if data == b"DONE":
-                                    print("Done Receiving.")
-                                    break
                             file.write(data)
                             file.close()
                         else:
@@ -125,7 +144,6 @@ class Peer():
                             port = 5000 + int(self.peers[0])               
                             peerSocket.connect(('127.0.0.1', port))
                             for doc in self.hashTable:
-                                
                                 #sending hash of file
                                 hashAddRequest = "h"+self.peerName+ doc
                                 peerSocket.sendall(hashAddRequest.encode('utf-8'))
@@ -137,8 +155,10 @@ class Peer():
                                     continue
                                 else:
                                     print("An error occurred")
-
+                            
                             peerSocket.close()
+                        else:
+                            print("\n DANGER! Not connected to any other peers")
                     
                 else:
                     print("Please choose a correct command")
@@ -157,22 +177,42 @@ class Peer():
                 incomingRequest = conn.recv(1024)
                 incomingRequest = incomingRequest.decode()
                 if not incomingRequest: break
+
+                #search for a file
                 if incomingRequest[0] == 's':
                     outGoingRequest = self.searchForResource(incomingRequest)
                     conn.sendall(outGoingRequest.encode('utf-8'))
+                
+                #obtain a file
                 elif incomingRequest[0] == 'o':
-                    fileToSend = open(FILE_PATH + self.peerName+"/"+incomingRequest[1:],'rb')
+                    fileToSend = open(FILE_PATH + self.hashTable[incomingRequest[1:]]+"/"+incomingRequest[1:],'rb')
                     outGoingRequest = fileToSend.read(1024)
                     conn.send(outGoingRequest)
+
+                #store resources before leaving
                 elif incomingRequest[0] == 'h':
                     self.storeInHash(incomingRequest[6:],incomingRequest[1:6])
                     outGoingRequest = "added"
                     conn.sendall(outGoingRequest.encode('utf-8'))
+
+                #get back Resources
+                elif incomingRequest[0] == 'c':
+                    outGoingRequest = self.searchForResourceValue(incomingRequest)
+                    conn.sendall(outGoingRequest.encode('utf-8'))
+                
                 else:
-                    outGoingRequest = "bluh"
+                    outGoingRequest = "Not found"
                     conn.sendall(outGoingRequest.encode('utf-8'))
         conn.close
 
+    def searchForResourceValue(self, searchRequest):
+        for h in self.hashTable:
+            if self.hashTable[h] == searchRequest[1:]:
+                fileName = self.hashTable[h]
+                del self.hashTable[h]
+                return fileName
+        return "not found"
+            
     def searchForResource(self, searchRequest):
         if searchRequest[1:] in self.hashTable:
             return "found"
