@@ -1,6 +1,6 @@
 from os.path import exists
 
-FILE_PATH = "peerFiles/"
+var = "hpeer1james.txt"
 
-file_exists = exists(FILE_PATH + "peer1/kkps.txt")
-print(file_exists)
+
+print(var[6:])

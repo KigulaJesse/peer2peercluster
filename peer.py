@@ -20,7 +20,8 @@ class Peer():
         self.hashTable = {}
         self.connectToPeers()
 
-    
+
+    # client function runs the main client code 
     def client(self):
         print("****************************")
         print("\t" +self.peerName)
@@ -61,7 +62,9 @@ class Peer():
                             peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
                             port = 5000 + int(ID)               
                             peerSocket.connect(('127.0.0.1', port))
+                            #sending search request
                             peerSocket.sendall(searchRequest.encode('utf-8'))
+                            #receiving from client
                             fromPeer = peerSocket.recv(4096)
                             fromPeer = fromPeer.decode()
                             if fromPeer == "found":
@@ -89,16 +92,37 @@ class Peer():
                     file.write(data)
                     file.close()					
                 
+                #relocation of resources
                 elif int(n) == 4:
-                    #replication of all in its hash table
-                    print("Replication to all peers")
+                    if len(self.hashTable) > 0:
+                        print("Replicate on another server")
+                        if len(self.peers) > 0:
+                            peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
+                            port = 5000 + int(self.peers[0])               
+                            peerSocket.connect(('127.0.0.1', port))
+                            for doc in self.hashTable:
+                                
+                                #sending hash of file
+                                hashAddRequest = "h"+self.peerName+ doc
+                                peerSocket.sendall(hashAddRequest.encode('utf-8'))
 
+                                #receiving response from server
+                                fromPeer = peerSocket.recv(4096)
+                                fromPeer = fromPeer.decode()
+                                if fromPeer == "added":
+                                    continue
+                                else:
+                                    print("An error occurred")
+
+                            peerSocket.close()
+                    
                 else:
                     print("Please choose a correct command")
             except ValueError:
                 print("\nPlease enter the correct commands")
         
 
+    #server function runs the main server code
     def server(self):
         peerServ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         peerServ.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -117,6 +141,10 @@ class Peer():
                     fileToSend = open(FILE_PATH + self.peerName+"/"+incomingRequest[1:],'rb')
                     outGoingRequest = fileToSend.read(1024)
                     conn.send(outGoingRequest)
+                elif incomingRequest[0] == 'h':
+                    self.storeInHash(incomingRequest[6:],incomingRequest[1:6])
+                    outGoingRequest = "added"
+                    conn.sendall(outGoingRequest.encode('utf-8'))
                 else:
                     outGoingRequest = "bluh"
                     conn.sendall(outGoingRequest.encode('utf-8'))
