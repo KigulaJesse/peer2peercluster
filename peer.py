@@ -1,6 +1,10 @@
-import time
 import socket
 import sys
+from os.path import exists
+from threading import Thread
+
+
+FILE_PATH = "peerFiles/"
 
 class Peer():
     def __init__(self,peerName,peerID,maxPeers=None):
@@ -34,15 +38,17 @@ class Peer():
 
                 n = input("Enter your choice: ")
 
+                #register a file
                 if int(n) == 1:
                     fileName = input("Enter filename with extension: ")
-            
-                    #Store that you have file in Hash
-                    self.storeInHash(fileName,self.peerName)
+                    file_exists = exists(FILE_PATH +self.peerName+"/"+fileName)
+                    if file_exists:
+                        self.storeInHash(fileName,self.peerName)
+                        print("\nSUCCESS, registered successfully\n")
+                    else:
+                        print("\nDANGER! You do not have this file on your computer\n")
 
-                    #success message on replication
-                    print("Success")
-
+                #search for a file on connected peers    
                 elif int(n) == 2:
                     fileName = input("Enter the File Name to be searched: ")
                     self.peersWithFile = []
@@ -62,7 +68,8 @@ class Peer():
                                 self.peersWithFile.append("peer"+str(ID))
                             peerSocket.close()
                     print(self.peersWithFile)
-                    
+
+                #obtain a file    
                 elif int(n) == 3:
                     obtainFileName = input("Enter the File Name:")
                     obtainPeerName = input("From where you wish to obtain " + obtainFileName + " :")
@@ -73,7 +80,7 @@ class Peer():
                     peerSocket.connect(('127.0.0.1', obtainPeerPort))
                     peerSocket.sendall(obtainRequest.encode('utf-8'))
                     
-                    file = open("peerFiles/"+self.peerName+"/"+obtainFileName, "wb")
+                    file = open(FILE_PATH +self.peerName+"/"+obtainFileName, "wb")
                     print("Receiving....")
                     data = peerSocket.recv(1024)
                     if data == b"DONE":
@@ -81,6 +88,7 @@ class Peer():
                             break
                     file.write(data)
                     file.close()					
+                
                 elif int(n) == 4:
                     #replication of all in its hash table
                     print("Replication to all peers")
@@ -106,7 +114,7 @@ class Peer():
                     outGoingRequest = self.searchForResource(incomingRequest)
                     conn.sendall(outGoingRequest.encode('utf-8'))
                 elif incomingRequest[0] == 'o':
-                    fileToSend = open("peerFiles/"+self.peerName+"/"+incomingRequest[1:],'rb')
+                    fileToSend = open(FILE_PATH + self.peerName+"/"+incomingRequest[1:],'rb')
                     outGoingRequest = fileToSend.read(1024)
                     conn.send(outGoingRequest)
                 else:
@@ -142,3 +150,11 @@ class Peer():
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('127.0.0.1', port)) == 0
+
+peer = Peer(sys.argv[1],sys.argv[1][-1])
+
+t1 = Thread(target = peer.server, args=( ))
+t2 = Thread(target = peer.client, args=( ))
+
+t1.start()
+t2.start()
