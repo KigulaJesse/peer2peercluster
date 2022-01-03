@@ -74,24 +74,48 @@ class Peer():
 
                 #obtain a file    
                 elif int(n) == 3:
+                    
                     obtainFileName = input("Enter the File Name:")
-                    obtainPeerName = input("From where you wish to obtain " + obtainFileName + " :")
-                    obtainPeerPort = 5000 + int(obtainPeerName[-1])
                     
-                    obtainRequest = "o" + obtainFileName
-                    peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    peerSocket.connect(('127.0.0.1', obtainPeerPort))
-                    peerSocket.sendall(obtainRequest.encode('utf-8'))
+                    self.peersWithFile = []
+                    if obtainFileName in self.hashTable:
+                        print("File already on this peer")
+                    elif len(self.peers) > 0:  
+                        obtainPeerName = "peer"
+                        searchRequest = "s" + obtainFileName
+                        file_exists_here = False
+                        for ID in self.peers:
+                            peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
+                            port = 5000 + int(ID)               
+                            peerSocket.connect(('127.0.0.1', port))
+                            #sending search request
+                            peerSocket.sendall(searchRequest.encode('utf-8'))
+                            #receiving from client
+                            fromPeer = peerSocket.recv(4096)
+                            fromPeer = fromPeer.decode()
+                            if fromPeer == "found":
+                                file_exists_here = True
+                                obtainPeerName = obtainPeerName+str(ID)
+                            peerSocket.close()
+
+                        if file_exists_here == True:
+                            obtainPeerPort = 5000 + int(obtainPeerName[-1])
+                            obtainRequest = "o" + obtainFileName
+                            peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                            peerSocket.connect(('127.0.0.1', obtainPeerPort))
+                            peerSocket.sendall(obtainRequest.encode('utf-8'))
+                            
+                            file = open(FILE_PATH +self.peerName+"/"+obtainFileName, "wb")
+                            print("Receiving....")
+                            data = peerSocket.recv(1024)
+                            if data == b"DONE":
+                                    print("Done Receiving.")
+                                    break
+                            file.write(data)
+                            file.close()
+                        else:
+                            print("File not found")					
                     
-                    file = open(FILE_PATH +self.peerName+"/"+obtainFileName, "wb")
-                    print("Receiving....")
-                    data = peerSocket.recv(1024)
-                    if data == b"DONE":
-                            print("Done Receiving.")
-                            break
-                    file.write(data)
-                    file.close()					
-                
                 #relocation of resources
                 elif int(n) == 4:
                     if len(self.hashTable) > 0:
@@ -121,7 +145,6 @@ class Peer():
             except ValueError:
                 print("\nPlease enter the correct commands")
         
-
     #server function runs the main server code
     def server(self):
         peerServ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -150,9 +173,6 @@ class Peer():
                     conn.sendall(outGoingRequest.encode('utf-8'))
         conn.close
 
-
-
-
     def searchForResource(self, searchRequest):
         if searchRequest[1:] in self.hashTable:
             return "found"
@@ -180,7 +200,9 @@ def is_port_in_use(port):
         return s.connect_ex(('127.0.0.1', port)) == 0
 
 """"INITIALISES A PEER"""
+
 peer = Peer(sys.argv[1],sys.argv[1][-1])
+
 t1 = Thread(target = peer.server, args=( ))
 t2 = Thread(target = peer.client, args=( ))
 
